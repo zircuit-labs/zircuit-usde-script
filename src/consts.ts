@@ -28,7 +28,7 @@ export const PENDLE_POOL_ADDRESSES = {
         {
             // Penpie
             address: "0x6e799758cee75dae3d84e09d40dc416ecf713652",
-            receiptToken: "0xf5250766b344568f8b4d783b7cbbc6415e93dd4d",
+            receiptToken: "0x73f8f505245870fd9070c204fe74835dd9c6ac28",
         },
         {
             // EQB

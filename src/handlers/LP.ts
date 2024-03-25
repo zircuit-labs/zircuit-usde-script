@@ -28,6 +28,9 @@ const db = new AsyncNedb({
   filename: "/data/pendle-accounts-lp.db",
   autoload: true,
 });
+
+db.persistence.setAutocompactionInterval(60 * 1000);
+
 type AccountSnapshot = {
   _id: string;
   lastUpdatedAt: number;

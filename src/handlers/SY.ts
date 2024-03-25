@@ -13,6 +13,9 @@ const db = new AsyncNedb({
   autoload: true,
 });
 
+db.persistence.setAutocompactionInterval(60 * 1000);
+
+
 type AccountSnapshot = {
   _id: string;
   lastUpdatedAt: number;

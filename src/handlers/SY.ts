@@ -29,9 +29,9 @@ export async function handleSYTransfer(evt: TransferEvent, ctx: ERC20Context) {
 
 export async function processAllAccounts(ctx: ERC20Context) {
   const accountSnapshots = await db.asyncFind<AccountSnapshot>({});
-  for (const snapshot of accountSnapshots) {
-    await processAccount(snapshot._id, ctx);
-  }
+  await Promise.all(
+    accountSnapshots.map((snapshot) => processAccount(snapshot._id, ctx))
+  );
 }
 
 async function processAccount(account: string, ctx: ERC20Context) {

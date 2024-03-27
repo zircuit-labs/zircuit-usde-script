@@ -3,6 +3,7 @@ import { TransferEvent } from "../types/eth/pendlemarket.js";
 import { ERC20Context } from "@sentio/sdk/eth/builtin/erc20";
 import { getUnixTimestamp, isPendleAddress } from "../helper.js";
 import { updatePoints } from "../points/point-manager.js";
+import { EVENT_USER_SHARE, POINT_SOURCE_SY } from "../types.js";
 
 /**
  * @dev 1 SY EZETH = 1 EZETH
@@ -42,7 +43,7 @@ async function processAccount(account: string, ctx: ERC20Context) {
   if (snapshot && snapshot.lastUpdatedAt < timestamp) {
     updatePoints(
       ctx,
-      "SY",
+      POINT_SOURCE_SY,
       account,
       BigInt(snapshot.lastBalance),
       BigInt(timestamp - snapshot.lastUpdatedAt),
@@ -50,10 +51,19 @@ async function processAccount(account: string, ctx: ERC20Context) {
     );
   }
 
+  const newBalance = await ctx.contract.balanceOf(account);
+
   const newSnapshot = {
     _id: account,
     lastUpdatedAt: timestamp,
-    lastBalance: (await ctx.contract.balanceOf(account)).toString(),
+    lastBalance: newBalance.toString(),
   };
+
+  ctx.eventLogger.emit(EVENT_USER_SHARE, {
+    label: POINT_SOURCE_SY,
+    account,
+    share: newBalance,
+  })
+
   await db.asyncUpdate({ _id: account }, newSnapshot, { upsert: true });
 }

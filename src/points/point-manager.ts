@@ -1,6 +1,7 @@
 import { LogLevel } from "@sentio/sdk";
 import { EthContext } from "@sentio/sdk/eth";
 import { MISC_CONSTS, PENDLE_POOL_ADDRESSES } from "../consts.js";
+import { EVENT_POINT_INCREASE, POINT_SOURCE, POINT_SOURCE_YT } from "../types.js";
 
 /**
  *
@@ -20,7 +21,7 @@ function calcPointsFromHolding(
 
 export async function updatePoints(
   ctx: EthContext,
-  label: string,
+  label: POINT_SOURCE,
   account: string,
   amountEzEthHolding: bigint,
   holdingPeriod: bigint,
@@ -31,7 +32,7 @@ export async function updatePoints(
     holdingPeriod
   );
 
-  if (label == "YT") {
+  if (label == POINT_SOURCE_YT) {
     const zPointTreasuryFee = calcTreasuryFee(zPoint);
     increasePoint(
       ctx,
@@ -66,14 +67,14 @@ export async function updatePoints(
 
 function increasePoint(
   ctx: EthContext,
-  label: string,
+  label: POINT_SOURCE,
   account: string,
   amountEzEthHolding: bigint,
   holdingPeriod: bigint,
   zPoint: bigint,
   updatedAt: number
 ) {
-  ctx.eventLogger.emit("point_increase", {
+  ctx.eventLogger.emit(EVENT_POINT_INCREASE, {
     label,
     account: account.toLowerCase(),
     amountEzEthHolding: amountEzEthHolding.scaleDown(18),

@@ -19,7 +19,7 @@ function calcPointsFromHolding(
   return amountEzEthHolding * MISC_CONSTS.EZETH_POINT_RATE / MISC_CONSTS.ONE_E18 * 2n * holdingPeriod / 3600n;
 }
 
-export async function updatePoints(
+export function updatePoints(
   ctx: EthContext,
   label: POINT_SOURCE,
   account: string,

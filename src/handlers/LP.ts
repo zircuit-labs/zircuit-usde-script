@@ -7,7 +7,7 @@ import {
   getPendleMarketContractOnContext,
 } from "../types/eth/pendlemarket.js";
 import { updatePoints } from "../points/point-manager.js";
-import { getUnixTimestamp, isLiquidLockerAddress } from "../helper.js";
+import { getUnixTimestamp, isLiquidLockerAddress, isSentioInternalError } from "../helper.js";
 import { MISC_CONSTS, PENDLE_POOL_ADDRESSES } from "../consts.js";
 import { getERC20ContractOnContext } from "@sentio/sdk/eth/builtin/erc20";
 import { EthContext } from "@sentio/sdk/eth";
@@ -105,7 +105,11 @@ export async function processAllLPAccounts(
           (userBal * liquidLockerActiveBal) / liquidLockerBal;
         allUserShares[i] += userBoostedHolding;
       }
-    } catch (err) { }
+    } catch (err) {
+      if (isSentioInternalError(err)) {
+        throw err;
+      }
+    }
   }
 
   const timestamp = getUnixTimestamp(ctx.timestamp);

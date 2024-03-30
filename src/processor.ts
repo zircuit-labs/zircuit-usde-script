@@ -36,12 +36,9 @@ PendleYieldTokenProcessor.bind({
   await handleYTTransfer(evt, ctx);
 }).onEventRedeemInterest(async(evt, ctx) => {
   await handleYTRedeemInterest(evt, ctx);
-}).onEventNewInterestIndex(async(_, ctx) => {
-  const YTIndex = await ctx.contract.pyIndexStored();
-  const YTIndexPreviousBlock = await ctx.contract.pyIndexStored({blockTag: ctx.blockNumber - 1});
-  if (YTIndex == YTIndexPreviousBlock) return;
+}).onTimeInterval(async(_, ctx) => {
   await processAllYTAccounts(ctx);
-});
+}, 24 * 60);
 
 PendleMarketProcessor.bind({
   address: PENDLE_POOL_ADDRESSES.LP,

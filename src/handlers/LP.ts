@@ -111,7 +111,7 @@ async function updateAccount(
     lastImpliedHolding: impliedSy.toString(),
   };
 
-  if (BigInt(snapshot.lastImpliedHolding) != impliedSy) {
+  if (BigInt(snapshot.lastImpliedHolding || 0) != impliedSy) {
     ctx.eventLogger.emit(EVENT_USER_SHARE, {
       label: POINT_SOURCE_LP,
       account: account,

@@ -143,11 +143,13 @@ async function updateAccount(
     lastImpliedHolding: impliedSy.toString(),
   };
 
-  ctx.eventLogger.emit(EVENT_USER_SHARE, {
-    label: POINT_SOURCE_LP,
-    account: account,
-    share: impliedSy,
-  });
+  if (snapshot.share != impliedSy) {
+    ctx.eventLogger.emit(EVENT_USER_SHARE, {
+      label: POINT_SOURCE_LP,
+      account: account,
+      share: impliedSy,
+    });
+  }
 
   await db.asyncUpdate({ _id: account }, newSnapshot, { upsert: true });
 }

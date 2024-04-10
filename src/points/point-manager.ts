@@ -5,30 +5,30 @@ import { EVENT_POINT_INCREASE, POINT_SOURCE, POINT_SOURCE_YT } from "../types.js
 
 /**
  *
- * @param amountEzEthHolding amount of Ez Eth user holds during the period
- * @param holdingPeriod amount of time user holds the Ez Eth
+ * @param amountUsdeHolding amount of USDe user holds during the period
+ * @param holdingPeriod amount of time user holds the USDe
  * @returns Zircuit point
  *
  * @dev to be reviewed by Zircuit team
  */
 function calcPointsFromHolding(
-  amountEzEthHolding: bigint,
+  amountUsdeHolding: bigint,
   holdingPeriod: bigint
 ): bigint {
-  // * ezETH exchangeRate and * 2 for the 2x multiplier
-  return amountEzEthHolding * MISC_CONSTS.EZETH_POINT_RATE / MISC_CONSTS.ONE_E18 * 2n * holdingPeriod / 3600n;
+  // 2x multiplier
+  return amountUsdeHolding * 2n * holdingPeriod / 3600n;
 }
 
 export function updatePoints(
   ctx: EthContext,
   label: POINT_SOURCE,
   account: string,
-  amountEzEthHolding: bigint,
+  amountUsdeHolding: bigint,
   holdingPeriod: bigint,
   updatedAt: number
 ) {
   const zPoint = calcPointsFromHolding(
-    amountEzEthHolding,
+    amountUsdeHolding,
     holdingPeriod
   );
 
@@ -38,7 +38,7 @@ export function updatePoints(
       ctx,
       label,
       account,
-      amountEzEthHolding,
+      amountUsdeHolding,
       holdingPeriod,
       zPoint - zPointTreasuryFee,
       updatedAt
@@ -57,7 +57,7 @@ export function updatePoints(
       ctx,
       label,
       account,
-      amountEzEthHolding,
+      amountUsdeHolding,
       holdingPeriod,
       zPoint,
       updatedAt
@@ -69,7 +69,7 @@ function increasePoint(
   ctx: EthContext,
   label: POINT_SOURCE,
   account: string,
-  amountEzEthHolding: bigint,
+  amountUsdeHolding: bigint,
   holdingPeriod: bigint,
   zPoint: bigint,
   updatedAt: number
@@ -77,7 +77,7 @@ function increasePoint(
   ctx.eventLogger.emit(EVENT_POINT_INCREASE, {
     label,
     account: account.toLowerCase(),
-    amountEzEthHolding: amountEzEthHolding.scaleDown(18),
+    amountUsdeHolding: amountUsdeHolding.scaleDown(18),
     holdingPeriod,
     zPoint: zPoint.scaleDown(18),
     updatedAt,

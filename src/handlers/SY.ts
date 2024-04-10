@@ -6,7 +6,7 @@ import { updatePoints } from "../points/point-manager.js";
 import { EVENT_USER_SHARE, POINT_SOURCE_SY } from "../types.js";
 
 /**
- * @dev 1 SY EZETH = 1 EZETH
+ * @dev 1 SY USDE = 1 USDE
  */
 
 const db = new AsyncNedb({
@@ -59,11 +59,13 @@ async function processAccount(account: string, ctx: ERC20Context) {
     lastBalance: newBalance.toString(),
   };
 
-  ctx.eventLogger.emit(EVENT_USER_SHARE, {
-    label: POINT_SOURCE_SY,
-    account,
-    share: newBalance,
-  })
+  if (snapshot.share != newBalance) {
+    ctx.eventLogger.emit(EVENT_USER_SHARE, {
+      label: POINT_SOURCE_SY,
+      account,
+      share: newBalance,
+    })
+  }
 
   await db.asyncUpdate({ _id: account }, newSnapshot, { upsert: true });
 }

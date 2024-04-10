@@ -103,7 +103,7 @@ export async function processAllYTAccounts(
       lastImpliedHolding: impliedHolding.toString(),
     };
 
-    if (snapshot.share != impliedHolding) {
+    if (BigInt(snapshot.lastImpliedHolding) != impliedHolding) {
       ctx.eventLogger.emit(EVENT_USER_SHARE, {
         label: POINT_SOURCE_YT,
         account: address,

@@ -59,7 +59,7 @@ async function processAccount(account: string, ctx: ERC20Context) {
     lastBalance: newBalance.toString(),
   };
 
-  if (snapshot.share != newBalance) {
+  if (BigInt(snapshot.lastBalance) != newBalance) {
     ctx.eventLogger.emit(EVENT_USER_SHARE, {
       label: POINT_SOURCE_SY,
       account,

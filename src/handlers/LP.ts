@@ -7,7 +7,7 @@ import {
   getPendleMarketContractOnContext,
 } from "../types/eth/pendlemarket.js";
 import { updatePoints } from "../points/point-manager.js";
-import { getUnixTimestamp, isLiquidLockerAddress, isSentioInternalError } from "../helper.js";
+import { getUnixTimestamp, isSentioInternalError } from "../helper.js";
 import { MISC_CONSTS, PENDLE_POOL_ADDRESSES } from "../consts.js";
 import { getERC20ContractOnContext } from "@sentio/sdk/eth/builtin/erc20";
 import { EthContext } from "@sentio/sdk/eth";
@@ -18,11 +18,7 @@ import { EVENT_USER_SHARE, POINT_SOURCE_LP } from "../types.js";
 /**
  * @dev 1 LP = (X PT + Y SY) where X and Y are defined by market conditions
  * So same as Balancer LPT, we need to update all positions on every swap
- *
- * Users can further deposit LP to liquid lockers to get back receipt tokens.
- * This should also be handled here.
- *
- * Currently for all liquid lockers, 1 receipt token = 1 LP
+
  */
 
 const db = new AsyncNedb({
@@ -69,7 +65,7 @@ export async function processAllLPAccounts(
 
   for (let address of addressesToAdd) {
     address = address.toLowerCase()
-    if (!allAddresses.includes(address) && !isLiquidLockerAddress(address)) {
+    if (!allAddresses.includes(address)) {
       allAddresses.push(address)
     }
   }
@@ -83,34 +79,6 @@ export async function processAllLPAccounts(
     marketContract.totalActiveSupply(),
     marketContract.readState(marketContract.address),
   ]);
-
-  for (const liquidLocker of PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS) {
-    const liquidLockerBal = await marketContract.balanceOf(
-      liquidLocker.address
-    );
-    if (liquidLockerBal == 0n) continue;
-
-    const liquidLockerActiveBal = await marketContract.activeBalance(
-      liquidLocker.address
-    );
-    try {
-      const allUserReceiptTokenBalances = await readAllUserERC20Balances(
-        ctx,
-        allAddresses,
-        liquidLocker.receiptToken
-      );
-      for (let i = 0; i < allAddresses.length; i++) {
-        const userBal = allUserReceiptTokenBalances[i];
-        const userBoostedHolding =
-          (userBal * liquidLockerActiveBal) / liquidLockerBal;
-        allUserShares[i] += userBoostedHolding;
-      }
-    } catch (err) {
-      if (isSentioInternalError(err)) {
-        throw err;
-      }
-    }
-  }
 
   const timestamp = getUnixTimestamp(ctx.timestamp);
   for (let i = 0; i < allAddresses.length; i++) {
@@ -143,7 +111,7 @@ async function updateAccount(
     lastImpliedHolding: impliedSy.toString(),
   };
 
-  if (snapshot.share != impliedSy) {
+  if (BigInt(snapshot.lastImpliedHolding) != impliedSy) {
     ctx.eventLogger.emit(EVENT_USER_SHARE, {
       label: POINT_SOURCE_LP,
       account: account,

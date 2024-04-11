@@ -15,8 +15,8 @@ function calcPointsFromHolding(
   amountUsdeHolding: bigint,
   holdingPeriod: bigint
 ): bigint {
-  // 2x multiplier
-  return amountUsdeHolding * 2n * holdingPeriod / 3600n;
+  // 20 sats per day
+  return amountUsdeHolding * 20n * holdingPeriod / (24n * 3600n);
 }
 
 export function updatePoints(
@@ -27,20 +27,20 @@ export function updatePoints(
   holdingPeriod: bigint,
   updatedAt: number
 ) {
-  const zPoint = calcPointsFromHolding(
+  const sats = calcPointsFromHolding(
     amountUsdeHolding,
     holdingPeriod
   );
 
   if (label == POINT_SOURCE_YT) {
-    const zPointTreasuryFee = calcTreasuryFee(zPoint);
+    const satsTreasuryFee = calcTreasuryFee(sats);
     increasePoint(
       ctx,
       label,
       account,
       amountUsdeHolding,
       holdingPeriod,
-      zPoint - zPointTreasuryFee,
+      sats - satsTreasuryFee,
       updatedAt
     );
     increasePoint(
@@ -49,7 +49,7 @@ export function updatePoints(
       PENDLE_POOL_ADDRESSES.TREASURY,
       0n,
       holdingPeriod,
-      zPointTreasuryFee,
+      satsTreasuryFee,
       updatedAt
     );
   } else {
@@ -59,7 +59,7 @@ export function updatePoints(
       account,
       amountUsdeHolding,
       holdingPeriod,
-      zPoint,
+      sats,
       updatedAt
     );
   }
@@ -71,7 +71,7 @@ function increasePoint(
   account: string,
   amountUsdeHolding: bigint,
   holdingPeriod: bigint,
-  zPoint: bigint,
+  sats: bigint,
   updatedAt: number
 ) {
   ctx.eventLogger.emit(EVENT_POINT_INCREASE, {
@@ -79,7 +79,7 @@ function increasePoint(
     account: account.toLowerCase(),
     amountUsdeHolding: amountUsdeHolding.scaleDown(18),
     holdingPeriod,
-    zPoint: zPoint.scaleDown(18),
+    sats: sats.scaleDown(18),
     updatedAt,
     severity: LogLevel.INFO,
   });

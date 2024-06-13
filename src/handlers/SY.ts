@@ -17,7 +17,7 @@ export async function handleSYTransfer(evt: TransferEvent, ctx: ERC20Context) {
 export async function processAllAccounts(ctx: ERC20Context) {
   const accountSnapshots = await ctx.store.list(AccountSnapshot);
   await Promise.all(
-    accountSnapshots.map((snapshot) => processAccount(snapshot._id, ctx))
+    accountSnapshots.map((snapshot) => processAccount(snapshot.id, ctx))
   );
 }
 
@@ -33,7 +33,7 @@ async function processAccount(account: string, ctx: ERC20Context) {
       POINT_SOURCE_SY,
       account,
       BigInt(snapshot.lastBalance),
-      BigInt(BigInt(timestamp) - snapshot.lastUpdatedAt.valueOf()),
+      BigInt(ts.valueOf() - snapshot.lastUpdatedAt.valueOf()),
       timestamp
     );
   }
@@ -41,7 +41,7 @@ async function processAccount(account: string, ctx: ERC20Context) {
   const newBalance = await ctx.contract.balanceOf(account);
 
   const newSnapshot = new AccountSnapshot({
-    _id: account,
+    id: account,
     lastUpdatedAt: BigInt(timestamp),
     lastBalance: newBalance.toString(),
   });

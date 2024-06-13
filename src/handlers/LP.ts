@@ -46,7 +46,7 @@ export async function processAllLPAccounts(
 ) {
   // might not need to do this on interval since we are doing it on every swap
   const allAddresses = (await ctx.store.list(AccountSnapshot))
-    .map((snapshot) => snapshot._id)
+    .map((snapshot) => snapshot.id)
 
   for (let address of addressesToAdd) {
     address = address.toLowerCase()
@@ -88,12 +88,12 @@ async function updateAccount(
       POINT_SOURCE_LP,
       account,
       BigInt(snapshot.lastImpliedHolding),
-      BigInt(BigInt(timestamp) - snapshot.lastUpdatedAt.valueOf()),
+      BigInt(ts.valueOf() - snapshot.lastUpdatedAt.valueOf()),
       timestamp
     );
   }
   const newSnapshot = new AccountSnapshot({
-    _id: account,
+    id: account,
     lastUpdatedAt: ts,
     lastImpliedHolding: impliedSy.toString(),
   });

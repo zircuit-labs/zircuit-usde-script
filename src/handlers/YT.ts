@@ -43,7 +43,7 @@ export async function processAllYTAccounts(
   }
 
   const allAddresses = shouldIncludeDb
-    ? (await ctx.store.list(AccountSnapshot)).map((x) => x._id)
+    ? (await ctx.store.list(AccountSnapshot)).map((x) => x.id)
     : [];
   for (let address of addressesToAdd) {
     address = address.toLowerCase();
@@ -73,7 +73,7 @@ export async function processAllYTAccounts(
         POINT_SOURCE_YT,
         address,
         BigInt(snapshot.lastImpliedHolding),
-        BigInt(BigInt(timestamp) - snapshot.lastUpdatedAt.valueOf()),
+        BigInt(ts.valueOf() - snapshot.lastUpdatedAt.valueOf()),
         timestamp
       );
     }
@@ -85,7 +85,7 @@ export async function processAllYTAccounts(
       interestData.accruedInterest;
 
     const newSnapshot = new AccountSnapshot({
-      _id: address,
+      id: address,
       lastUpdatedAt: BigInt(timestamp),
       lastImpliedHolding: impliedHolding.toString(),
     });

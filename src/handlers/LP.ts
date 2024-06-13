@@ -45,7 +45,6 @@ export async function processAllLPAccounts(
   addressesToAdd: string[] = []
 ) {
   // might not need to do this on interval since we are doing it on every swap
-  ctx.store.get
   const allAddresses = (await ctx.store.list(AccountSnapshot))
     .map((snapshot) => snapshot._id)
 

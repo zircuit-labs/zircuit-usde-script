@@ -92,10 +92,12 @@ async function updateAccount(
       timestamp
     );
   }
+  
   const newSnapshot = new AccountSnapshot({
     id: account,
     lastUpdatedAt: ts,
     lastImpliedHolding: impliedSy.toString(),
+    lastBalance: snapshot ? snapshot.lastBalance.toString() : ""
   });
 
   if (BigInt(snapshot ? snapshot.lastImpliedHolding : 0) != impliedSy) {

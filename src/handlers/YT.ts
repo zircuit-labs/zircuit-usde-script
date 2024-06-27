@@ -88,6 +88,7 @@ export async function processAllYTAccounts(
       id: address,
       lastUpdatedAt: BigInt(timestamp),
       lastImpliedHolding: impliedHolding.toString(),
+      lastBalance: snapshot ? snapshot.lastBalance.toString() : ""
     });
 
     if (BigInt(snapshot ? snapshot.lastImpliedHolding : 0) != impliedHolding) {

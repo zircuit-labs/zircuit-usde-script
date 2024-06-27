@@ -60,7 +60,7 @@ export async function processAllLPAccounts(
   );
 
   const [allUserShares, totalShare, state] = await Promise.all([
-    readAllUserActiveBalances(ctx, allAddresses),
+    readAllUserActiveBalances(ctx, allAddresses.map(id => id.toString())),
     marketContract.totalActiveSupply(),
     marketContract.readState(marketContract.address),
   ]);
@@ -69,7 +69,7 @@ export async function processAllLPAccounts(
   for (let i = 0; i < allAddresses.length; i++) {
     const account = allAddresses[i];
     const impliedSy = (allUserShares[i] * state.totalSy) / totalShare;
-    await updateAccount(ctx, account, impliedSy, timestamp);
+    await updateAccount(ctx, account.toString(), impliedSy, timestamp);
   }
 }
 
@@ -80,15 +80,15 @@ async function updateAccount(
   timestamp: number
 ) {
   const snapshot = await ctx.store.get(AccountSnapshot, account);
-  const ts : BigInt = BigInt(timestamp);
+  const ts : bigint = BigInt(timestamp).valueOf();
   
-  if (snapshot && snapshot.lastUpdatedAt < ts) {
+  if (snapshot && snapshot.lastUpdatedAt < timestamp) {
     updatePoints(
       ctx,
       POINT_SOURCE_LP,
       account,
       BigInt(snapshot.lastImpliedHolding),
-      BigInt(ts.valueOf() - snapshot.lastUpdatedAt.valueOf()),
+      BigInt(ts - snapshot.lastUpdatedAt.valueOf()),
       timestamp
     );
   }

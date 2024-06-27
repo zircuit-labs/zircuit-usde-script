@@ -43,7 +43,7 @@ export async function processAllYTAccounts(
   }
 
   const allAddresses = shouldIncludeDb
-    ? (await ctx.store.list(AccountSnapshot)).map((x) => x.id)
+    ? (await ctx.store.list(AccountSnapshot)).map((x) => x.id.toString())
     : [];
   for (let address of addressesToAdd) {
     address = address.toLowerCase();
@@ -66,12 +66,12 @@ export async function processAllYTAccounts(
     const interestData = allYTPositions[i];
 
     const snapshot = await await ctx.store.get(AccountSnapshot, address);
-    const ts : BigInt = BigInt(timestamp);
+    const ts : bigint = BigInt(timestamp).valueOf();
     if (snapshot && snapshot.lastUpdatedAt < ts) {
       updatePoints(
         ctx,
         POINT_SOURCE_YT,
-        address,
+        address.toString(),
         BigInt(snapshot.lastImpliedHolding),
         BigInt(ts.valueOf() - snapshot.lastUpdatedAt.valueOf()),
         timestamp

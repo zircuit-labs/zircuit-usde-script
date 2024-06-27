@@ -17,14 +17,14 @@ export async function handleSYTransfer(evt: TransferEvent, ctx: ERC20Context) {
 export async function processAllAccounts(ctx: ERC20Context) {
   const accountSnapshots = await ctx.store.list(AccountSnapshot);
   await Promise.all(
-    accountSnapshots.map((snapshot) => processAccount(snapshot.id, ctx))
+    accountSnapshots.map((snapshot) => processAccount(snapshot.id.toString(), ctx))
   );
 }
 
 async function processAccount(account: string, ctx: ERC20Context) {
   if (isPendleAddress(account)) return;
   const timestamp = getUnixTimestamp(ctx.timestamp);
-  const ts : BigInt = BigInt(timestamp);
+  const ts : bigint = BigInt(timestamp).valueOf();
 
   const snapshot = await ctx.store.get(AccountSnapshot, account);
   if (snapshot && snapshot.lastUpdatedAt < ts) {

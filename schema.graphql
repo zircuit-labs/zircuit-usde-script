@@ -1,0 +1,7 @@
+type AccountSnapshot @entity {
+  id: ID!
+  label: String!
+  lastUpdatedAt: BigInt!
+  lastImpliedHolding: String!
+  lastBalance: String!
+}

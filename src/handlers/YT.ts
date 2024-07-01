@@ -1,4 +1,4 @@
-import { AsyncNedb } from "nedb-async";
+import { AccountSnapshot } from "../schema/schema.ts"
 import {
   PendleYieldTokenContext,
   RedeemInterestEvent,
@@ -6,27 +6,13 @@ import {
 } from "../types/eth/pendleyieldtoken.js";
 import { updatePoints } from "../points/point-manager.js";
 import { MISC_CONSTS } from "../consts.js";
-import { getUnixTimestamp, isPendleAddress } from "../helper.js";
+import { getUnixTimestamp, isPendleAddress, listSnapshots, getSnapshot } from "../helper.js";
 import { readAllUserERC20Balances, readAllYTPositions } from "../multicall.js";
 import { EVENT_USER_SHARE, POINT_SOURCE_YT } from "../types.js";
 
 /**
  * @dev 1 YT USDE is entitled to yields and points
  */
-
-const db = new AsyncNedb({
-  filename: "/data/pendle-accounts-yt.db",
-  autoload: true,
-});
-
-db.persistence.setAutocompactionInterval(60 * 1000);
-
-
-type AccountSnapshot = {
-  _id: string;
-  lastUpdatedAt: number;
-  lastImpliedHolding: string;
-};
 
 export async function handleYTTransfer(
   evt: TransferEvent,
@@ -57,7 +43,7 @@ export async function processAllYTAccounts(
   }
 
   const allAddresses = shouldIncludeDb
-    ? (await db.asyncFind<AccountSnapshot>({})).map((x) => x._id)
+    ? (await listSnapshots(ctx, POINT_SOURCE_YT)).map((x) => x.id.toString())
     : [];
   for (let address of addressesToAdd) {
     address = address.toLowerCase();
@@ -79,14 +65,15 @@ export async function processAllYTAccounts(
     const balance = allYTBalances[i];
     const interestData = allYTPositions[i];
 
-    const snapshot = await db.asyncFindOne<AccountSnapshot>({ _id: address });
-    if (snapshot && snapshot.lastUpdatedAt < timestamp) {
+    const snapshot = (await getSnapshot(ctx, address, POINT_SOURCE_YT))[0];
+    const ts : bigint = BigInt(timestamp).valueOf();
+    if (snapshot && snapshot.lastUpdatedAt < ts) {
       updatePoints(
         ctx,
         POINT_SOURCE_YT,
-        address,
+        address.toString(),
         BigInt(snapshot.lastImpliedHolding),
-        BigInt(timestamp - snapshot.lastUpdatedAt),
+        BigInt(ts.valueOf() - snapshot.lastUpdatedAt.valueOf()),
         timestamp
       );
     }
@@ -97,11 +84,13 @@ export async function processAllYTAccounts(
       (balance * MISC_CONSTS.ONE_E18) / interestData.lastPYIndex +
       interestData.accruedInterest;
 
-    const newSnapshot = {
-      _id: address,
-      lastUpdatedAt: timestamp,
+    const newSnapshot = new AccountSnapshot({
+      id: address,
+      label: POINT_SOURCE_YT,
+      lastUpdatedAt: BigInt(timestamp),
       lastImpliedHolding: impliedHolding.toString(),
-    };
+      lastBalance: snapshot ? snapshot.lastBalance.toString() : ""
+    });
 
     if (BigInt(snapshot ? snapshot.lastImpliedHolding : 0) != impliedHolding) {
       ctx.eventLogger.emit(EVENT_USER_SHARE, {
@@ -111,6 +100,6 @@ export async function processAllYTAccounts(
       });
     }
 
-    await db.asyncUpdate({ _id: address }, newSnapshot, { upsert: true });
+    await ctx.store.upsert(newSnapshot);
   }
 }

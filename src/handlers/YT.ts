@@ -6,7 +6,7 @@ import {
 } from "../types/eth/pendleyieldtoken.js";
 import { updatePoints } from "../points/point-manager.js";
 import { MISC_CONSTS } from "../consts.js";
-import { getUnixTimestamp, isPendleAddress } from "../helper.js";
+import { getUnixTimestamp, isPendleAddress, listSnapshots, getSnapshot } from "../helper.js";
 import { readAllUserERC20Balances, readAllYTPositions } from "../multicall.js";
 import { EVENT_USER_SHARE, POINT_SOURCE_YT } from "../types.js";
 
@@ -43,7 +43,7 @@ export async function processAllYTAccounts(
   }
 
   const allAddresses = shouldIncludeDb
-    ? (await ctx.store.list(AccountSnapshot)).map((x) => x.id.toString())
+    ? (await listSnapshots(ctx, POINT_SOURCE_YT)).map((x) => x.id.toString())
     : [];
   for (let address of addressesToAdd) {
     address = address.toLowerCase();
@@ -65,7 +65,7 @@ export async function processAllYTAccounts(
     const balance = allYTBalances[i];
     const interestData = allYTPositions[i];
 
-    const snapshot = await await ctx.store.get(AccountSnapshot, address);
+    const snapshot = (await getSnapshot(ctx, address, POINT_SOURCE_YT))[0];
     const ts : bigint = BigInt(timestamp).valueOf();
     if (snapshot && snapshot.lastUpdatedAt < ts) {
       updatePoints(
@@ -86,6 +86,7 @@ export async function processAllYTAccounts(
 
     const newSnapshot = new AccountSnapshot({
       id: address,
+      label: POINT_SOURCE_YT,
       lastUpdatedAt: BigInt(timestamp),
       lastImpliedHolding: impliedHolding.toString(),
       lastBalance: snapshot ? snapshot.lastBalance.toString() : ""

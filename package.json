@@ -10,7 +10,7 @@
     "upload": "sentio upload --skip-deps"
   },
   "dependencies": {
-    "@sentio/sdk": "^2.39.6"
+    "@sentio/sdk": "^2.39.7-rc.22"
   },
   "devDependencies": {
     "@sentio/cli": "2.18.2",

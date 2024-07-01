@@ -1,4 +1,6 @@
-import { PENDLE_POOL_ADDRESSES } from "./consts.js";
+import { PENDLE_POOL_ADDRESSES } from "./consts.ts";
+import { EthContext } from "@sentio/sdk/eth";
+import { AccountSnapshot } from "./schema/schema.ts"
 import os from 'os';
 
 export function isPendleAddress(addr: string) {
@@ -24,4 +26,25 @@ export function isSentioInternalError(err: any): boolean {
         return true;
     }
     return false;
+}
+
+export async function listSnapshots(ctx : EthContext, label : string) : Promise<AccountSnapshot[]> {
+    return ctx.store.list(AccountSnapshot, [{
+        field: 'label',
+        op: 'like',
+        value: label
+    }]);
+}
+
+export async function getSnapshot(ctx : EthContext, id : string, label : string) : Promise<AccountSnapshot[]> {
+    return await ctx.store.list(AccountSnapshot, [{
+        field: 'label',
+        op: 'like',
+        value: label
+    },
+    {
+        field: 'id',
+        op: 'like',
+        value: id
+    }]);
 }

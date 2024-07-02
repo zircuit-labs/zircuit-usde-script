@@ -7,7 +7,7 @@ import {
   getPendleMarketContractOnContext,
 } from "../types/eth/pendlemarket.js";
 import { updatePoints } from "../points/point-manager.js";
-import { getUnixTimestamp } from "../helper.js";
+import { getUnixTimestamp, getAllAddresses } from "../helper.js";
 import { PENDLE_POOL_ADDRESSES } from "../consts.js";
 import { EthContext } from "@sentio/sdk/eth";
 import { readAllUserActiveBalances } from "../multicall.js";
@@ -45,8 +45,7 @@ export async function processAllLPAccounts(
   addressesToAdd: string[] = []
 ) {
   // might not need to do this on interval since we are doing it on every swap
-  const allAddresses = (await ctx.store.list(AccountSnapshot))
-    .map((snapshot) => snapshot.id)
+  const allAddresses = await getAllAddresses(ctx);
 
   for (let address of addressesToAdd) {
     address = address.toLowerCase()
@@ -79,7 +78,8 @@ async function updateAccount(
   impliedSy: bigint,
   timestamp: number
 ) {
-  const snapshot = await ctx.store.get(AccountSnapshot, account);
+  const accountId = account + POINT_SOURCE_LP;
+  const snapshot = await ctx.store.get(AccountSnapshot, accountId);
   const ts : bigint = BigInt(timestamp).valueOf();
   
   if (snapshot && snapshot.lastUpdatedAt < timestamp) {
@@ -94,7 +94,7 @@ async function updateAccount(
   }
   
   const newSnapshot = new AccountSnapshot({
-    id: account,
+    id: accountId,
     lastUpdatedAt: ts,
     lastImpliedHolding: impliedSy.toString(),
     lastBalance: snapshot ? snapshot.lastBalance.toString() : ""

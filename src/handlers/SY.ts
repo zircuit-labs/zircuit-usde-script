@@ -1,7 +1,7 @@
 import { AccountSnapshot } from "../schema/schema.ts"
 import { TransferEvent } from "../types/eth/pendlemarket.js";
 import { ERC20Context } from "@sentio/sdk/eth/builtin/erc20";
-import { getUnixTimestamp, isPendleAddress } from "../helper.js";
+import { getUnixTimestamp, isPendleAddress, getAllAddresses } from "../helper.js";
 import { updatePoints } from "../points/point-manager.js";
 import { EVENT_USER_SHARE, POINT_SOURCE_SY } from "../types.js";
 
@@ -15,10 +15,8 @@ export async function handleSYTransfer(evt: TransferEvent, ctx: ERC20Context) {
 }
 
 export async function processAllAccounts(ctx: ERC20Context) {
-  const accountSnapshots = await ctx.store.list(AccountSnapshot);
-  await Promise.all(
-    accountSnapshots.map((snapshot) => processAccount(snapshot.id.toString(), ctx))
-  );
+  const allAddresses = await getAllAddresses(ctx);
+  await Promise.all(allAddresses.map((a) => processAccount(a, ctx)));
 }
 
 async function processAccount(account: string, ctx: ERC20Context) {
@@ -26,7 +24,8 @@ async function processAccount(account: string, ctx: ERC20Context) {
   const timestamp = getUnixTimestamp(ctx.timestamp);
   const ts : bigint = BigInt(timestamp).valueOf();
 
-  const snapshot = await ctx.store.get(AccountSnapshot, account);
+  const accountId = account + POINT_SOURCE_SY;
+  const snapshot = await ctx.store.get(AccountSnapshot, accountId);
   if (snapshot && snapshot.lastUpdatedAt < ts) {
     updatePoints(
       ctx,
@@ -41,7 +40,7 @@ async function processAccount(account: string, ctx: ERC20Context) {
   const newBalance = await ctx.contract.balanceOf(account);
 
   const newSnapshot = new AccountSnapshot({
-    id: account,
+    id: accountId,
     lastUpdatedAt: BigInt(timestamp),
     lastImpliedHolding: snapshot ? snapshot.lastImpliedHolding.toString() : "",
     lastBalance: newBalance.toString(),

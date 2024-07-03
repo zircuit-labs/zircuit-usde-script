@@ -59,7 +59,7 @@ export async function processAllLPAccounts(
   );
 
   const [allUserShares, totalShare, state] = await Promise.all([
-    readAllUserActiveBalances(ctx, allAddresses.map(id => id.toString())),
+    readAllUserActiveBalances(ctx, allAddresses),
     marketContract.totalActiveSupply(),
     marketContract.readState(marketContract.address),
   ]);
@@ -68,7 +68,7 @@ export async function processAllLPAccounts(
   for (let i = 0; i < allAddresses.length; i++) {
     const account = allAddresses[i];
     const impliedSy = (allUserShares[i] * state.totalSy) / totalShare;
-    await updateAccount(ctx, account.toString(), impliedSy, timestamp);
+    await updateAccount(ctx, account, impliedSy, timestamp);
   }
 }
 

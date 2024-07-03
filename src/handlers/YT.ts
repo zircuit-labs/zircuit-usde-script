@@ -72,7 +72,7 @@ export async function processAllYTAccounts(
       updatePoints(
         ctx,
         POINT_SOURCE_YT,
-        address.toString(),
+        address,
         BigInt(snapshot.lastImpliedHolding),
         BigInt(ts.valueOf() - snapshot.lastUpdatedAt.valueOf()),
         timestamp

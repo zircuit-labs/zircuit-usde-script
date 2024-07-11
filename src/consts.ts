@@ -21,5 +21,13 @@ export const PENDLE_POOL_ADDRESSES = {
   // the block which the new contract is deployed
   START_BLOCK: 20158751,
   TREASURY: "0x8270400d528c34e1596ef367eedec99080a1b592",
+  PENPIE_RECEIPT_TOKEN: "0xae74d5ab1055c7f13da7718ba5a7a068e50b8a64",
   MULTICALL: "0xca11bde05977b3631167028862be2a173976ca11",
+  LIQUID_LOCKERS: [
+    {
+      // Penpie
+      address: "0x6e799758cee75dae3d84e09d40dc416ecf713652",
+      receiptToken: "0xae74d5ab1055c7f13da7718ba5a7a068e50b8a64",
+    },
+  ],
 };

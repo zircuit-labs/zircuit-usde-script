@@ -19,6 +19,7 @@ export const PENDLE_POOL_ADDRESSES = {
   // using new pool contract
   LP: "0xF148a0B15712f5BfeefAdb4E6eF9739239F88b07",
   // the block which the new contract is deployed
+  SY_START_BLOCK: 19588116,
   START_BLOCK: 20158751,
   TREASURY: "0x8270400d528c34e1596ef367eedec99080a1b592",
   PENPIE_RECEIPT_TOKEN: "0xae74d5ab1055c7f13da7718ba5a7a068e50b8a64",

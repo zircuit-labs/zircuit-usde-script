@@ -1,4 +1,4 @@
-import { AccountSnapshot } from "../schema/schema.ts"
+import { AccountSnapshot } from "../schema/schema.ts";
 import {
   PendleMarketContext,
   RedeemRewardsEvent,
@@ -7,10 +7,18 @@ import {
   getPendleMarketContractOnContext,
 } from "../types/eth/pendlemarket.js";
 import { updatePoints } from "../points/point-manager.js";
-import { getUnixTimestamp, getAllAddresses } from "../helper.js";
+import {
+  getUnixTimestamp,
+  getAllAddresses,
+  isLiquidLockerAddress,
+  isSentioInternalError,
+} from "../helper.js";
 import { PENDLE_POOL_ADDRESSES } from "../consts.js";
 import { EthContext } from "@sentio/sdk/eth";
-import { readAllUserActiveBalances } from "../multicall.js";
+import {
+  readAllUserActiveBalances,
+  readAllUserERC20Balances,
+} from "../multicall.js";
 import { EVENT_USER_SHARE, POINT_SOURCE_LP } from "../types.js";
 
 /**
@@ -48,9 +56,9 @@ export async function processAllLPAccounts(
   const allAddresses = await getAllAddresses(ctx);
 
   for (let address of addressesToAdd) {
-    address = address.toLowerCase()
-    if (!allAddresses.includes(address)) {
-      allAddresses.push(address)
+    address = address.toLowerCase();
+    if (!allAddresses.includes(address) && !isLiquidLockerAddress(address)) {
+      allAddresses.push(address);
     }
   }
   const marketContract = getPendleMarketContractOnContext(
@@ -64,12 +72,42 @@ export async function processAllLPAccounts(
     marketContract.readState(marketContract.address),
   ]);
 
+  for (const liquidLocker of PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS) {
+    const liquidLockerBal = await marketContract.balanceOf(
+      liquidLocker.address
+    );
+    if (liquidLockerBal == 0n) continue;
+
+    const liquidLockerActiveBal = await marketContract.activeBalance(
+      liquidLocker.address
+    );
+    try {
+      const allUserReceiptTokenBalances = await readAllUserERC20Balances(
+        ctx,
+        allAddresses,
+        liquidLocker.receiptToken
+      );
+      for (let i = 0; i < allAddresses.length; i++) {
+        const userBal = allUserReceiptTokenBalances[i];
+        const userBoostedHolding =
+          (userBal * liquidLockerActiveBal) / liquidLockerBal;
+        allUserShares[i] += userBoostedHolding;
+      }
+    } catch (err) {
+      if (isSentioInternalError(err)) {
+        throw err;
+      }
+    }
+  }
+
   const timestamp = getUnixTimestamp(ctx.timestamp);
   const updateAccountPromises = [];
   for (let i = 0; i < allAddresses.length; i++) {
     const account = allAddresses[i];
     const impliedSy = (allUserShares[i] * state.totalSy) / totalShare;
-    updateAccountPromises.push(updateAccount(ctx, account, impliedSy, timestamp));
+    updateAccountPromises.push(
+      updateAccount(ctx, account, impliedSy, timestamp)
+    );
   }
   await Promise.all(updateAccountPromises);
 }
@@ -82,8 +120,8 @@ async function updateAccount(
 ) {
   const accountId = account.toLowerCase() + POINT_SOURCE_LP;
   const snapshot = await ctx.store.get(AccountSnapshot, accountId);
-  const ts : bigint = BigInt(timestamp).valueOf();
-  
+  const ts: bigint = BigInt(timestamp).valueOf();
+
   if (snapshot && snapshot.lastUpdatedAt < timestamp) {
     updatePoints(
       ctx,
@@ -94,12 +132,12 @@ async function updateAccount(
       timestamp
     );
   }
-  
+
   const newSnapshot = new AccountSnapshot({
     id: accountId,
     lastUpdatedAt: ts,
     lastImpliedHolding: impliedSy.toString(),
-    lastBalance: snapshot ? snapshot.lastBalance.toString() : ""
+    lastBalance: snapshot ? snapshot.lastBalance.toString() : "",
   });
 
   if (BigInt(snapshot ? snapshot.lastImpliedHolding : 0) != impliedSy) {

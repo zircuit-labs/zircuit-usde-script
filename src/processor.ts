@@ -12,6 +12,7 @@ import {
   handleLPTransfer,
   handleMarketRedeemReward,
   handleMarketSwap,
+  processAllLPAccounts,
 } from "./handlers/LP.js";
 import { GLOBAL_CONFIG } from "@sentio/runtime";
 
@@ -71,17 +72,17 @@ PendleMarketProcessor.bind({
   await processAllLPAccounts(ctx, [evt.args._user.toLowerCase()]);
 }) */
 
-/* ERC20Processor.bind({
+ERC20Processor.bind({
   address: PENDLE_POOL_ADDRESSES.PENPIE_RECEIPT_TOKEN,
   startBlock: PENDLE_POOL_ADDRESSES.START_BLOCK,
   name: "Pendle Pie Receipt Token",
-  network: CONFIG.BLOCKCHAIN
-}).onEventTransfer(async(evt, ctx) => {
+  network: CONFIG.BLOCKCHAIN,
+}).onEventTransfer(async (evt, ctx) => {
   await processAllLPAccounts(ctx, [
     evt.args.from.toLowerCase(),
     evt.args.to.toLowerCase(),
   ]);
-}); */
+});
 
 // ERC20Processor.bind({
 //   address: PENDLE_POOL_ADDRESSES.STAKEDAO_RECEIPT_TOKEN,
